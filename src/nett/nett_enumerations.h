@@ -79,11 +79,11 @@ typedef enum {
 
 typedef enum {
 
- GET,
- POST,
- PATCH,
- PUT, 
- DELETE
+ HTTP_METHOD_GET,
+ HTTP_METHOD_POST,
+ HTTP_METHOD_PATCH,
+ HTTP_METHOD_PUT, 
+ HTTP_METHOD_DELETE
 
 } HttpMethod;
 

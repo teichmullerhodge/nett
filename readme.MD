@@ -1,9 +1,9 @@
 # nett
-A lightweight HTTP client wrapper built on top of libcurl, written in C.  
+A lightweight HTTP sync/async client wrapper built on top of libcurl, written in C.  
 It supports GET, POST, PUT, PATCH and DELETE requests, custom headers, and buffered responses.
 
 ## Features
-- Simple synchronous HTTP requests  
+- Simple synchronous and asynchronous HTTP requests  
 - GET, POST, PUT, PATCH and DELETE  
 - Custom headers  
 - Automatic response buffer growth using realloc  
@@ -16,5 +16,5 @@ It supports GET, POST, PUT, PATCH and DELETE requests, custom headers, and buffe
 - pthreads  
 
 ## Improvements 
-- Add async support
+- Improve async support
 - Add perform_all methods to make multiple requests in parallel

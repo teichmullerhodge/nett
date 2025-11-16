@@ -1,26 +1,46 @@
 #include "nett.h"
 #include <curl/curl.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "nett_enumerations.h"
 
-static CURL *nett_ref_handler = NULL;
-atomic_int initialized = 0;
+#define MAX_PARALLEL_REQ 64
+
+static CURL* nett_ref_handlers[MAX_PARALLEL_REQ] = {0};
+sem_t handler_semaphore;
+
+atomic_int curl_initialized = 0;
+atomic_int handlers_index = -1;
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 
 CURL *get_handler(){
 
     (void)lock;
-    if (initialized == 0){
-        atomic_fetch_add(&initialized, 1);
+    if (curl_initialized == 0){
+        atomic_fetch_add(&curl_initialized, 1);
         curl_global_init(CURL_GLOBAL_ALL);
+        sem_init(&handler_semaphore, 0, MAX_PARALLEL_REQ);
+        for(size_t k = 0; k < MAX_PARALLEL_REQ; k++){
+          nett_ref_handlers[k] = curl_easy_init();
+        }
     }
 
-    nett_ref_handler = curl_easy_init();
-    return nett_ref_handler;
+    sem_wait(&handler_semaphore);
+    atomic_fetch_add(&handlers_index, 1); 
+    return nett_ref_handlers[handlers_index];
+}
+
+void nett_end(){
+
+  for(size_t k = 0; k < MAX_PARALLEL_REQ; k++) {
+   curl_easy_cleanup(nett_ref_handlers[k]);
+  }
 }
 
 void reset_response(NettResponse *res){
@@ -121,8 +141,9 @@ void terminate_request(NettResponse *res){
     res->status_code = (HttpStatus)code;
     
     curl_slist_free_all(res->__headers_ref);
-    curl_easy_cleanup(res->__handler);
-  
+    curl_easy_cleanup(res->__handler);  // TODO this would be called again at nett_end, is it a problem?
+    atomic_fetch_sub(&handlers_index, 1);
+    sem_post(&handler_semaphore);
 }
 
 bool has_result_error(CURLcode res){
@@ -199,4 +220,5 @@ void nett_put(const char *url, NettHeaders *headers, const char *body, NettRespo
 void nett_delete(const char *url, NettHeaders *headers, const char *body, NettResponse *res){
   return nett_custom_request("DELETE", url, headers, body, res);
 }
+
 

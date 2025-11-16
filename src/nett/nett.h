@@ -6,6 +6,7 @@
 #include "nett_enumerations.h"
 #include <curl/curl.h>
 
+
 typedef struct {
 
   char *contents;
@@ -25,6 +26,8 @@ typedef struct {
 
 NettResponse *init_response();
 void destroy_response(NettResponse *res);
+void nett_end();
+
 
 
 
@@ -33,7 +36,6 @@ void nett_post(const char *url, NettHeaders *headers, const char *body, NettResp
 void nett_patch(const char *url, NettHeaders *headers, const char *body,NettResponse *res);
 void nett_put(const char *url, NettHeaders *headers, const char *body,NettResponse *res);
 void nett_delete(const char *url, NettHeaders *headers, const char *body,NettResponse *res);
-
 
 
 
